@@ -12,44 +12,27 @@ MyServer::~MyServer() {}
 
 //-------------------------------------------------------------------------------
 
-QString MyServer::getExecutablePath(QDBusReply<uint> reply) {
-  if (reply.isValid()) {
-    uint pid = reply.value();
-
-    // Формируем путь к файлу /proc/<PID>/exe
-    QString procFilePath = QString("/proc/%1/exe").arg(pid);
-
-    // Используем QFileInfo для получения пути к исполняемому файлу
-    QFileInfo exeFile(procFilePath);
-
-    // Возвращаем полный путь к исполняемому файлу
-    return exeFile.canonicalFilePath();
-  }
-
-  qWarning() << "Failed to get executable path for client " << reply.error();
-  return QString();
-}
-
-//-------------------------------------------------------------------------------
-
 void MyServer::RequestPermission(int permissionEnumCode) {
-  // TODO
-  //сделать проверку кода разрешения
-  // Permissions code = permissionEnumCode;
-
   // TODO
   // В случае ошибки метод должен возвращать DBus
   // ошибку с человекочитаемым сообщением.
 
-  if (!database.openDatabase("Permission.db"))
+  if (!Permissions::typeList.contains(
+          static_cast<Permissions::permType>(permissionEnumCode))) {
+    qWarning() << "Error, there is no such permission code";
     return;
+  }
+
+  if (!database.openDatabase("Permission.db")) {
+    return;
+  }
 
   // Получаем PID клиента и преобразовываем в путь до исполяемого файла
-  QString path = getExecutablePath(
-      connection().interface()->servicePid(message().service()));
+  QString path(getExecutablePath(
+      connection().interface()->servicePid(message().service())));
 
   if (path.isEmpty()) {
-    qWarning() << "Path empty";
+    qWarning() << "Error, path empty";
     return;
   }
 
@@ -66,7 +49,6 @@ void MyServer::RequestPermission(int permissionEnumCode) {
       "VALUES (:exePath, :code)");
   query->bindValue(":exePath", path);
   query->bindValue(":code", permissionEnumCode);
-
   if (!query->exec()) {
     qWarning() << "Error when inserting a record in sql:"
                << query->lastError().text();
@@ -83,23 +65,28 @@ bool MyServer::CheckApplicationHasPermission(QString applicationExecPath,
   //  В случае ошибки метод должен возвращать DBus
   //  ошибку с человекочитаемым сообщением
 
+  if (!Permissions::typeList.contains(
+          static_cast<Permissions::permType>(permissionEnumCode))) {
+    qWarning() << "Error, there is no such permission code";
+    return false;
+  }
+
   if (!database.openDatabase("Permission.db"))
     return false;
 
   QSqlQuery* query = database.getQuery();
-
   query->prepare(
       "SELECT exePath, code FROM permissions "
       "WHERE exePath = :exePath AND code = :code");
   query->bindValue(":exePath", applicationExecPath);
   query->bindValue(":code", permissionEnumCode);
-
   if (!query->exec()) {
     qWarning() << "Error when selecting an entry in sql:"
                << query->lastError().text();
   }
 
   database.closeDatabase();
+
   return query->next();
 }
 
@@ -119,4 +106,24 @@ void MyServer::showPermissions() {
   }
 
   database.closeDatabase();
+}
+
+//-------------------------------------------------------------------------------
+
+QString getExecutablePath(QDBusReply<uint> reply) {
+  if (reply.isValid()) {
+    uint pid = reply.value();
+
+    // Формируем путь к файлу /proc/<PID>/exe
+    QString procFilePath = QString("/proc/%1/exe").arg(pid);
+
+    // Используем QFileInfo для получения пути к исполняемому файлу
+    QFileInfo exeFile(procFilePath);
+
+    // Возвращаем полный путь к исполняемому файлу
+    return exeFile.canonicalFilePath();
+  }
+
+  qWarning() << "Failed to get executable path for client " << reply.error();
+  return QString();
 }

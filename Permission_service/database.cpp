@@ -14,13 +14,13 @@ Database::~Database() {
 //-------------------------------------------------------------------------------
 bool Database::openDatabase(const QString& path) {
   if (!m_db.isValid()) {
-    qWarning() << "Invalid database";
+    qWarning() << "Error, invalid database";
     return false;
   }
 
   m_db.setDatabaseName(path);
   if (!m_db.open()) {
-    qCritical() << "Failed to open database:" << m_db.lastError().text();
+    qCritical() << "Error, failed to open database:" << m_db.lastError().text();
     return false;
   }
 

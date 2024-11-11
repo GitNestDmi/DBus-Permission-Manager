@@ -5,11 +5,14 @@
 #include <QDBusContext>
 #include <QDBusReply>
 #include <QObject>
+#include <QVector>
 
 namespace Permissions {
-enum class permType : int { SystemTime = 0 };
 
-}
+enum class permType : int { SystemTime = 0 };
+const QVector<permType> typeList = {permType::SystemTime};
+
+}  // namespace Permissions
 
 class MyServer : public QObject, protected QDBusContext {
   Q_OBJECT
@@ -27,8 +30,8 @@ class MyServer : public QObject, protected QDBusContext {
 
  private:
   Database database;
-
-  QString getExecutablePath(QDBusReply<uint> reply);
 };
+
+QString getExecutablePath(QDBusReply<uint> reply);
 
 #endif  // MYSERVER_H
