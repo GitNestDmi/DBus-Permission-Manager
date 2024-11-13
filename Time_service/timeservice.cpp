@@ -48,7 +48,7 @@ quint64 TimeService::GetSystemTime() {
   if (reply.value()) {
     // Получаем и отправляем timestamp
     QDateTime currentTime = QDateTime::currentDateTime();
-    quint64 timestamp = static_cast<qint64>(currentTime.toMSecsSinceEpoch());
+    quint64 timestamp = static_cast<quint64>(currentTime.toMSecsSinceEpoch());
     return timestamp;
   } else {
     // Создание ответа

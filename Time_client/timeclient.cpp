@@ -47,7 +47,7 @@ QString TimeClient::getSystemTimestamp() {
 
   // Преобразуем timestamp в человекочитаемый вид
   QDateTime dateTime =
-      QDateTime::fromMSecsSinceEpoch(static_cast<quint64>(reply.value()));
+      QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(reply.value()));
   QString formattedDateTime = dateTime.toString("dd.MM.yyyy hh:mm:ss");
   return formattedDateTime;
 }
