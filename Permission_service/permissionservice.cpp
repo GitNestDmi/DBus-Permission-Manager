@@ -5,7 +5,20 @@
 #include <QFileInfo>
 
 PermissionService::PermissionService(QObject* parent)
-    : QObject(parent), database(std::make_unique<Database>()) {}
+    : QObject(parent), database(std::make_unique<Database>()) {
+  //Создаем пустую БД, если ее еще нет
+  if (!database->openDatabase("Permission.db")) {
+    database->closeDatabase();
+  }
+  QSqlQuery* query = database->getQuery();
+  query->exec(
+      "CREATE TABLE IF NOT EXISTS permissions ("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+      "exePath TEXT, "
+      "code INTEGER, "
+      "UNIQUE(exePath, code))");
+  database->closeDatabase();
+}
 
 //-------------------------------------------------------------------------------
 
@@ -43,13 +56,6 @@ void PermissionService::RequestPermission(int permissionEnumCode) {
 
   // Добовляем путь к клиенту и код разрешения в базу данных
   QSqlQuery* query = database->getQuery();
-  query->exec(
-      "CREATE TABLE IF NOT EXISTS permissions ("
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-      "exePath TEXT, "
-      "code INTEGER, "
-      "UNIQUE(exePath, code))");
-
   query->prepare(
       "INSERT INTO permissions (exePath, code) "
       "VALUES (:exePath, :code)");
@@ -57,9 +63,8 @@ void PermissionService::RequestPermission(int permissionEnumCode) {
   query->bindValue(":code", permissionEnumCode);
 
   if (!query->exec()) {
-    sendErrorReply(
-        QDBusError::Failed,
-        "Error when inserting a record in sql:" + query->lastError().text());
+    sendErrorReply(QDBusError::Failed, "Error when inserting a record in sql:" +
+                                           query->lastError().text());
     database->closeDatabase();
   }
 
@@ -79,8 +84,6 @@ bool PermissionService::CheckApplicationHasPermission(
     return false;
   }
 
-  // TODO
-  // будет ли открываться, если ее еще нет ?
   if (!database->openDatabase("Permission.db")) {
     sendErrorReply(QDBusError::Failed,
                    "Error, the database could not be opened");
@@ -96,9 +99,8 @@ bool PermissionService::CheckApplicationHasPermission(
   query->bindValue(":code", permissionEnumCode);
 
   if (!query->exec()) {
-    sendErrorReply(
-        QDBusError::Failed,
-        "Error when selecting an entry in sql:" + query->lastError().text());
+    sendErrorReply(QDBusError::Failed, "Error when selecting an entry in sql:" +
+                                           query->lastError().text());
     database->closeDatabase();
     return false;
   }

@@ -41,8 +41,9 @@ quint64 TimeService::GetSystemTime() {
                                       Permissions::SystemTime);
 
   if (!reply.isValid()) {
-    QString error("Error, reply is invalid ");
+    QString error("Error, reply is invalid: ");
     error.append(reply.error().name());
+    error.append("\n");
     error.append(reply.error().message());
     sendErrorReply(QDBusError::Failed, error);
     return 0;
