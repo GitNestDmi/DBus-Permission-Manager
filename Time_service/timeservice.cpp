@@ -48,14 +48,13 @@ quint64 TimeService::GetSystemTime() {
   if (reply.value()) {
     // Получаем и отправляем timestamp
     QDateTime currentTime = QDateTime::currentDateTime();
-    qint64 timestamp = currentTime.toMSecsSinceEpoch();
+    quint64 timestamp = static_cast<qint64>(currentTime.toMSecsSinceEpoch());
     return timestamp;
   } else {
-    // TODO
-    // Код ошибки кастомный или из библиотеки ?
-    sendErrorReply(QDBusError::AccessDenied,
-                   "Error, this client does not have permission to execute");
-    return 1;
+    // Создание ответа
+    QDBusMessage reply = message().createReply(Permissions::UnauthorizedAccess);
+    QDBusConnection::sessionBus().send(reply);
+    return 0;
   }
 }
 

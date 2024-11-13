@@ -16,6 +16,9 @@ namespace Permissions {
 enum permType : int { SystemTime = 0 };
 const QVector<permType> types = {permType::SystemTime};
 
+enum ErrorType : int { UnauthorizedAccess = 1 };
+
+
 }  // namespace Permissions
 
 

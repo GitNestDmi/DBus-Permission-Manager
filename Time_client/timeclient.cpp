@@ -26,28 +26,28 @@ QString TimeClient::getSystemTimestamp() {
   }
 
   //Попытка запросить время
-  QDBusReply<quint64> reply = iface.call("GetSystemTime");
+  QDBusMessage responce = iface.call("GetSystemTime");
+  QDBusReply<quint64> reply;
 
-  // TODO
-  // Код ошибки кастомный или из библиотеки ?
   //Если нет разрешения, то запрашиваем его и повторяем запрос времени
-  if (reply.error().name() ==
-      QDBusError::errorString(QDBusError::AccessDenied)) {
+  if (responce.arguments().at(0) == Permissions::UnauthorizedAccess) {
     //Просим разрешение
     if (!getPermission(Permissions::SystemTime))
       return "";
 
     reply = iface.call("GetSystemTime");
+  } else {
+    reply = responce;
   }
 
-  //Обработка ошибок
   if (!reply.isValid()) {
     qWarning() << reply.error().message();
     return "";
   }
 
   // Преобразуем timestamp в человекочитаемый вид
-  QDateTime dateTime = QDateTime::fromMSecsSinceEpoch(reply.value());
+  QDateTime dateTime =
+      QDateTime::fromMSecsSinceEpoch(static_cast<quint64>(reply.value()));
   QString formattedDateTime = dateTime.toString("dd.MM.yyyy hh:mm:ss");
   return formattedDateTime;
 }
