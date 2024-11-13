@@ -1,8 +1,13 @@
-#include <QCoreApplication>
+#include "timeclient.h"
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication a(argc, argv);
+#include <QDebug>
 
-    return a.exec();
+int main() {
+  TimeClient service{};
+  QString date(service.getSystemTimestamp());
+
+  if (!date.isEmpty())
+    qInfo() << "Date " << date;
+
+  return 0;
 }

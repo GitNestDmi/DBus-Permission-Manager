@@ -63,8 +63,9 @@ void PermissionService::RequestPermission(int permissionEnumCode) {
   query->bindValue(":code", permissionEnumCode);
 
   if (!query->exec()) {
-    sendErrorReply(QDBusError::Failed, "Error when inserting a record in sql:" +
-                                           query->lastError().text());
+    sendErrorReply(
+        QDBusError::Failed,
+        "Error when inserting a record in sql: " + query->lastError().text());
     database->closeDatabase();
   }
 
@@ -99,8 +100,9 @@ bool PermissionService::CheckApplicationHasPermission(
   query->bindValue(":code", permissionEnumCode);
 
   if (!query->exec()) {
-    sendErrorReply(QDBusError::Failed, "Error when selecting an entry in sql:" +
-                                           query->lastError().text());
+    sendErrorReply(
+        QDBusError::Failed,
+        "Error when selecting an entry in sql: " + query->lastError().text());
     database->closeDatabase();
     return false;
   }
