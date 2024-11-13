@@ -1,35 +1,31 @@
 #ifndef MYSERVER_H
 #define MYSERVER_H
 
-#include <database.h>
 #include <QDBusContext>
 #include <QDBusReply>
 #include <QObject>
-#include <QVector>
+#include <memory>
 
-namespace Permissions {
+#include "database.h"
+#include "serverInterface.h"
 
-enum class permType : int { SystemTime = 0 };
-const QVector<permType> typeList = {permType::SystemTime};
-
-}  // namespace Permissions
-
-class MyServer : public QObject, protected QDBusContext {
+class PermissionService : public QObject, protected QDBusContext {
   Q_OBJECT
-  Q_CLASSINFO("D-Bus Interface", "com.system.permissionsAPI")
+  Q_CLASSINFO("D-Bus Interface", PERNISSIONS_SERVICE_API)
 
  public:
-  explicit MyServer(QObject* parent = nullptr);
-  ~MyServer() override;
+  explicit PermissionService(QObject* parent = nullptr);
+  ~PermissionService() override;
 
  public Q_SLOTS:
   Q_SCRIPTABLE void RequestPermission(int permissionEnumCode);
   Q_SCRIPTABLE bool CheckApplicationHasPermission(QString applicationExecPath,
                                                   int permissionEnumCode);
+
   Q_SCRIPTABLE void showPermissions();  // Для проверки записей, нет в задании
 
  private:
-  Database database;
+  std::unique_ptr<IDataBase> database;
 };
 
 QString getExecutablePath(QDBusReply<uint> reply);

@@ -1,29 +1,31 @@
-#include "myserver.h"
+#include "permissionservice.h"
 
 #include <QDBusConnectionInterface>
 #include <QDebug>
 #include <QFileInfo>
 
-MyServer::MyServer(QObject* parent) : QObject(parent), database{this} {}
+PermissionService::PermissionService(QObject* parent)
+    : QObject(parent), database(std::make_unique<Database>()) {}
 
 //-------------------------------------------------------------------------------
 
-MyServer::~MyServer() {}
+PermissionService::~PermissionService() {}
 
 //-------------------------------------------------------------------------------
 
-void MyServer::RequestPermission(int permissionEnumCode) {
-  // TODO
-  // В случае ошибки метод должен возвращать DBus
-  // ошибку с человекочитаемым сообщением.
-
-  if (!Permissions::typeList.contains(
+void PermissionService::RequestPermission(int permissionEnumCode) {
+  // Проверяем верный ли код разрешения
+  if (!Permissions::types.contains(
           static_cast<Permissions::permType>(permissionEnumCode))) {
-    qWarning() << "Error, there is no such permission code";
+    sendErrorReply(QDBusError::Failed,
+                   "Error, there is no such permission code");
     return;
   }
 
-  if (!database.openDatabase("Permission.db")) {
+  if (!database->openDatabase("Permission.db")) {
+    sendErrorReply(QDBusError::Failed,
+                   "Error, the database could not be opened");
+    database->closeDatabase();
     return;
   }
 
@@ -32,11 +34,15 @@ void MyServer::RequestPermission(int permissionEnumCode) {
       connection().interface()->servicePid(message().service())));
 
   if (path.isEmpty()) {
-    qWarning() << "Error, path empty";
+    sendErrorReply(
+        QDBusError::Failed,
+        "Error, could not get the path to the client executable file");
+    database->closeDatabase();
     return;
   }
 
-  QSqlQuery* query = database.getQuery();
+  // Добовляем путь к клиенту и код разрешения в базу данных
+  QSqlQuery* query = database->getQuery();
   query->exec(
       "CREATE TABLE IF NOT EXISTS permissions ("
       "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -49,54 +55,66 @@ void MyServer::RequestPermission(int permissionEnumCode) {
       "VALUES (:exePath, :code)");
   query->bindValue(":exePath", path);
   query->bindValue(":code", permissionEnumCode);
+
   if (!query->exec()) {
-    qWarning() << "Error when inserting a record in sql:"
-               << query->lastError().text();
+    sendErrorReply(
+        QDBusError::Failed,
+        "Error when inserting a record in sql:" + query->lastError().text());
+    database->closeDatabase();
   }
 
-  database.closeDatabase();
+  database->closeDatabase();
 }
 
 //-------------------------------------------------------------------------------
 
-bool MyServer::CheckApplicationHasPermission(QString applicationExecPath,
-                                             int permissionEnumCode) {
-  // TODO
-  //  В случае ошибки метод должен возвращать DBus
-  //  ошибку с человекочитаемым сообщением
-
-  if (!Permissions::typeList.contains(
+bool PermissionService::CheckApplicationHasPermission(
+    QString applicationExecPath,
+    int permissionEnumCode) {
+  // Проверяем верный ли код разрешения
+  if (!Permissions::types.contains(
           static_cast<Permissions::permType>(permissionEnumCode))) {
-    qWarning() << "Error, there is no such permission code";
+    sendErrorReply(QDBusError::Failed,
+                   "Error, there is no such permission code");
     return false;
   }
 
-  if (!database.openDatabase("Permission.db"))
+  // TODO
+  // будет ли открываться, если ее еще нет ?
+  if (!database->openDatabase("Permission.db")) {
+    sendErrorReply(QDBusError::Failed,
+                   "Error, the database could not be opened");
+    database->closeDatabase();
     return false;
+  }
 
-  QSqlQuery* query = database.getQuery();
+  QSqlQuery* query = database->getQuery();
   query->prepare(
       "SELECT exePath, code FROM permissions "
       "WHERE exePath = :exePath AND code = :code");
   query->bindValue(":exePath", applicationExecPath);
   query->bindValue(":code", permissionEnumCode);
+
   if (!query->exec()) {
-    qWarning() << "Error when selecting an entry in sql:"
-               << query->lastError().text();
+    sendErrorReply(
+        QDBusError::Failed,
+        "Error when selecting an entry in sql:" + query->lastError().text());
+    database->closeDatabase();
+    return false;
   }
 
-  database.closeDatabase();
+  database->closeDatabase();
 
   return query->next();
 }
 
 //-------------------------------------------------------------------------------
 
-void MyServer::showPermissions() {
-  if (!database.openDatabase("Permission.db"))
+void PermissionService::showPermissions() {
+  if (!database->openDatabase("Permission.db"))
     return;
 
-  QSqlQuery* query = database.getQuery();
+  QSqlQuery* query = database->getQuery();
   query->exec("SELECT id, exePath, code FROM permissions");
 
   while (query->next()) {
@@ -105,7 +123,7 @@ void MyServer::showPermissions() {
              << query->value(2).toString() << " \t|";
   }
 
-  database.closeDatabase();
+  database->closeDatabase();
 }
 
 //-------------------------------------------------------------------------------

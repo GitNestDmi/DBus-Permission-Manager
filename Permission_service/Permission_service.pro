@@ -21,7 +21,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         database.cpp \
         main.cpp \
-        myserver.cpp
+        permissionservice.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -30,7 +30,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     database.h \
-    myserver.h \
-    ..\serverInterface.h
+    ..\serverInterface.h \
+    permissionservice.h
 
 INCLUDEPATH += $$PWD/..

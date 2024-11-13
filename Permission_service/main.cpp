@@ -1,22 +1,24 @@
 #include <QCoreApplication>
+#include <QDBusConnection>
 #include <QObject>
-#include <QtDBus/QDBusConnection>
-#include "myserver.h"
+
+#include "permissionservice.h"
 #include "serverInterface.h"
 
 int main(int argc, char* argv[]) {
   QCoreApplication app(argc, argv);
-  MyServer server(&app);
+  PermissionService service(&app);
 
   //Регистрируем сервис и объект на сесссионной шине
   QDBusConnection connection = QDBusConnection::sessionBus();
-  if (!connection.registerService(SERVICE_NAME)) {
-    qWarning() << "Failed to register service.";
+  if (!connection.registerService(PERNISSIONS_SERVICE_NAME)) {
+    qWarning() << "Failed to register service " << PERNISSIONS_SERVICE_NAME;
     return 1;
   }
-  if (!connection.registerObject(SERVICE_PATH, &server,
+  if (!connection.registerObject(PERNISSIONS_SERVICE_PATH, &service,
                                  QDBusConnection::ExportScriptableSlots)) {
-    qWarning() << "Failed to register object.";
+    qWarning() << "Failed to register object " << PERNISSIONS_SERVICE_PATH
+               << " " << &service;
     return 1;
   }
 

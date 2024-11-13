@@ -1,16 +1,15 @@
 #include "database.h"
 #include <QDebug>
 
-Database::Database(QObject* parent)
-    : QObject(parent),
-      m_db(QSqlDatabase::addDatabase("QSQLITE")),
-      query(QSqlQuery{m_db}) {}
+IDataBase::~IDataBase() {}
+//-------------------------------------------------------------------------------
+Database::Database()
+    : m_db(QSqlDatabase::addDatabase("QSQLITE")), query(QSqlQuery{m_db}) {}
 
 //-------------------------------------------------------------------------------
 Database::~Database() {
   closeDatabase();
 }
-
 //-------------------------------------------------------------------------------
 bool Database::openDatabase(const QString& path) {
   if (!m_db.isValid()) {
@@ -20,7 +19,8 @@ bool Database::openDatabase(const QString& path) {
 
   m_db.setDatabaseName(path);
   if (!m_db.open()) {
-    qCritical() << "Error, failed to open database:" << m_db.lastError().text();
+    qWarning() << "Error, the database could not be opened:"
+               << m_db.lastError().text();
     return false;
   }
 

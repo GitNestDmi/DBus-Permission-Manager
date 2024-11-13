@@ -2,16 +2,19 @@
 #define DATABASE_H
 
 #include <QDebug>
-#include <QObject>
-#include <QSharedPointer>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
 
-class Database : public QObject {
-  Q_OBJECT
- public:
-  explicit Database(QObject* parent = nullptr);
+struct IDataBase {
+  virtual ~IDataBase();
+  virtual bool openDatabase(const QString& path) = 0;
+  virtual void closeDatabase() = 0;
+  virtual QSqlQuery* getQuery() = 0;
+};
+
+struct Database : public IDataBase {
+  Database();
   ~Database();
 
   bool openDatabase(const QString& path);
