@@ -14,7 +14,7 @@
   - `void RequestPermission(int permissionEnumCode)` - получает путь до исполняемого файла, вызвавшего данный метод, и сохраняет запрос.
   - `bool CheckApplicationHasPermission(String applicationExecPath, int permissionEnumCode)` - проверяет имеется ли у приложения заданное разрешение. 
   
-- DBus сервис **`Time_service`** c именем на шине `com.system.time`, который имеет 1 публичный метод:
+- DBus сервис **`Time_client`** c именем на шине `com.system.time`, который имеет 1 публичный метод:
   - `uint64 GetSystemTime()` - получает путь до исполняемого файла, вызвавшего данный метод, и проверяет разрешение у сервиса `com.system.permissions`, в случае успеха возврашает **timestamp** текущего системного времени, иначе возврашает ошибку **UnauthorizedAccess**.
 
 - Приложение **`Time_service`**, которое:
@@ -29,7 +29,8 @@
 - git
 - qmake (версия >= 3.10)
 - gcc/g++ (версия >= 9.40)
-- qdbus (пакет libqt5dbus5)  
+- qdbus (пакет libqt5dbus5)
+- sqlite3  
 
 ___
 
@@ -118,10 +119,33 @@ ___
     cd Time_client/ && ./Time_client
     ``` 
 
-#### Пример работы
+#### Пример работы приложений
 
 ![work](https://github.com/GitNestDmi/DBus-Permission-Manager/blob/main/other/example.jpg)
 
+
+#### Примеры вызова методов сервисов через консоль
+
+Перед вызовом методов необходимо запустить соответствующий сервис, как это было показано ранее.
+
+1. Вызов методов сервиса `Permission_service`.
+   
+   1. Вызов метода проверки разрешения c параметрами: filePath - путь к файлу и permissionCode - код разрешения(в приложении есть только код SysteTime = 0).
+    ```
+    qdbus com.system.permissions /com/system/permissions com.system.permissionsAPI.CheckApplicationHasPermission <string filePath> <int permissionCode>
+    ```
+
+   2. Вызов метода регистрации разрешения c параметром permissionCode - код разрешения(в приложении есть только код SysteTime = 0).
+   ```
+   qdbus com.system.permissions /com/system/permissions com.system.permissionsAPI.RequestPermission <int permissionCode>
+   ``` 
+
+2. Вызов метода сервиса `Time_service`.
+
+    1.Вызов метода получения **timestamp**.
+    ```
+    qdbus com.system.time /com/system/time com.system.timeAPI.GetSystemTime
+    ``` 
 
 ___
 
