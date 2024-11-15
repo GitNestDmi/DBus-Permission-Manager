@@ -25,16 +25,22 @@ QString TimeClient::getSystemTimestamp() {
     return "";
   }
 
+  qInfo() << "Запрос системного времени...";
+
   //Попытка запросить время
   QDBusMessage responce = iface.call("GetSystemTime");
   QDBusReply<quint64> reply;
 
   //Если нет разрешения, то запрашиваем его и повторяем запрос времени
   if (responce.arguments().at(0) == Permissions::UnauthorizedAccess) {
+    qInfo() << "Нет разрешения на получение системного времени";
+    qInfo() << "Запрос разрешения на получение системного времени...";
     //Просим разрешение
-    if (!getPermission(Permissions::SystemTime))
+    if (!getPermission(Permissions::SystemTime)) {
       return "";
+    }
 
+    qInfo() << "Повторный запрос системного времени...";
     reply = iface.call("GetSystemTime");
   } else {
     reply = responce;
