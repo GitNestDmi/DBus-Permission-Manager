@@ -20,7 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        timeservice.cpp
+        time_service.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -28,7 +28,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    ..\serverInterface.h \
-    timeservice.h
+    ../common/server_interface.h \
+    time_service.h
 
-INCLUDEPATH += $$PWD/..
+INCLUDEPATH += $$PWD/.. \
+    ../common

@@ -7,23 +7,23 @@
 #include <QSqlQuery>
 
 struct IDataBase {
-  virtual ~IDataBase();
-  virtual bool openDatabase(const QString& path) = 0;
-  virtual void closeDatabase() = 0;
-  virtual QSqlQuery* getQuery() = 0;
+    virtual ~IDataBase();
+    virtual bool openDatabase(const QString& path) = 0;
+    virtual void closeDatabase() = 0;
+    virtual QSqlQuery* getQuery() = 0;
 };
 
 struct Database : public IDataBase {
-  Database();
-  ~Database();
+    Database();
+    ~Database();
 
-  bool openDatabase(const QString& path);
-  void closeDatabase();
-  QSqlQuery* getQuery() { return &query; }
+    bool openDatabase(const QString& path);
+    void closeDatabase();
+    QSqlQuery* getQuery() { return &query_; }
 
- private:
-  QSqlDatabase m_db;
-  QSqlQuery query;
+private:
+    QSqlDatabase db_;
+    QSqlQuery query_;
 };
 
-#endif  // DATABASE_H
+#endif // DATABASE_H
